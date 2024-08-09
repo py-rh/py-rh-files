@@ -126,11 +126,12 @@ class FineTuner():
             report_to="tensorboard",
         )
 
-    def sft_trainer(self, training_data, peft_parameters, train_params):
+    def sft_trainer(self, training_data, evaluation_data, peft_parameters, train_params):
         # Set up the SFTTrainer with the model, training data, and parameters to learn from the new dataset
         return SFTTrainer(
             model=self.model,
             train_dataset=training_data,
+            eval_dataset=evaluation_data,
             peft_config=peft_parameters,
             dataset_text_field="prompt",  # Dependent on your dataset
             tokenizer=self.tokenizer,
@@ -155,7 +156,7 @@ class FineTuner():
         )
 
         train_params = self.training_params(num_train_epochs)
-        trainer = self.sft_trainer(self.train_data, peft_parameters, train_params)
+        trainer = self.sft_trainer(self.train_data, self.test_data, peft_parameters, train_params)
 
         # Force clean the pytorch cache
         gc.collect()
