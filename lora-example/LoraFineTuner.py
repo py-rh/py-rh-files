@@ -38,9 +38,7 @@ class FineTuner():
         self.train_data = None
         self.test_data = None 
         self.eval_results = None
-        self.perplexity = None
-        self.loss = None
-
+        
 
     def load_base_model(self):
         # configure the model for efficient training
@@ -180,50 +178,6 @@ class FineTuner():
         self.epochs_trained = self.epochs_trained + num_train_epochs
         print("Saved model weights and tokenizer on the cluster.")
 
-        self.calculate_perplexity()
-        print(f"Perplexity: {self.perplexity}")
-        print(f"Loss: {self.loss}")
-
-
-    
-    def calculate_loss(self):
-        gc.collect()
-        torch.cuda.empty_cache()
-        gc.collect()
-
-        print(torch.cuda.memory_allocated(0))
-            
-        if self.model is None:
-            self.load_fine_tuned_model()
-        if self.tokenizer is None:
-            self.load_tokenizer()
-        if self.test_data is None:
-            raise ValueError("Test data is not loaded. Please call `load_train_and_test` before calculating loss.")
-
-        self.model.eval()  # Set model to evaluation mode
-        
-        # Prepare the test data
-        test_encodings = self.tokenizer(self.test_data['input'], truncation=True, padding=True, return_tensors='pt')
-        test_encodings = {k: v.to('cuda') for k, v in test_encodings.items()}
-
-        # Predict on the test data
-        with torch.no_grad():
-            outputs = self.model(**test_encodings)
-
-        # Calculate the cross entropy loss
-        loss_fct = torch.nn.CrossEntropyLoss()
-        labels = test_encodings['input_ids']
-        avg_loss = loss_fct(outputs.logits.view(-1, model.config.vocab_size), labels.view(-1))
-
-        # Calculate the perplexity
-        self.perplexity = torch.exp(loss).item()
-        self.avg_loss = avg_loss
-        return {
-            "average_loss": avg_loss,
-            "perplexity": perplexity.item()
-        }
-
-
 
     def generate(self, query: str, max_length: int = DEFAULT_MAX_LENGTH):
         if self.model is None:
@@ -281,12 +235,7 @@ if __name__ == "__main__":
     ## Launch a cluster 
     # You will need to `pip install "runhouse[aws]"` first
     # You can run `sky check` to confirm AWS credentials are setup
-    cluster = rh.cluster(
-        name="rh-a10x",
-        instance_type="A10G:1",
-        memory="32+",
-        provider="aws",
-    ).up_if_not()
+    cluster = rh.cluster(name="/rh-alpha-testers/jamesb")
 
     # You will need a HF_TOKEN as an env variable 
     # Reqs will be installed by Runhouse on remote
@@ -305,20 +254,11 @@ if __name__ == "__main__":
         ],
         secrets=["huggingface"],  # Needed to download Llama 3 from Hugging Face
     )
-
-
     
 
     ## Here, we will access a remote instance of our fine tuner class
     fine_tuner_remote_name = "rh_finetuner"
-    fine_tuner = rh.module(FineTuner).to(
-        cluster, env=env, name="llama3-medical-model"
-    )
-    fine_tuner_remote = fine_tuner(name=fine_tuner_remote_name)
-    fine_tuner_remote.load_train_and_test()
-    fine_tuner_remote.calculate_loss()
 
-    '''
     # We check if we have already created a "rh_finetuner" on the remote which is an *instance* of the remote fine tuner class
     fine_tuner_remote = cluster.get(fine_tuner_remote_name, default=None, remote=True)
 
@@ -329,7 +269,7 @@ if __name__ == "__main__":
             cluster, env=env, name="llama3-medical-model"
         )
         fine_tuner_remote = fine_tuner(name=fine_tuner_remote_name)
-'''
+
     ## Once we have accessed the remote class, we can call against it as if it were a local object 
     #fine_tuner_remote.tune()
 
