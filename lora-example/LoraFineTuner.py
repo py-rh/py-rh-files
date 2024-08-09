@@ -203,8 +203,6 @@ class FineTuner():
             "pipeline_loaded": self.pipeline is not None,
             "training_completed": self.new_model_exists(),
             "epochs_trained": self.epochs_trained,
-            "perplexity": self.perplexity,
-            "loss": self.loss,
             "eval results": self.eval_results,
         }
 
