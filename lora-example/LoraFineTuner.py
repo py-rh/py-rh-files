@@ -271,7 +271,7 @@ if __name__ == "__main__":
         fine_tuner_remote = fine_tuner(name=fine_tuner_remote_name)
 
     ## Once we have accessed the remote class, we can call against it as if it were a local object 
-    #fine_tuner_remote.tune()
+    fine_tuner_remote.tune()
 
     # Once the fine tuner is complete, we can query against it 
     query = "What's the best treatment for sunburn?"
