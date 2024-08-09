@@ -168,7 +168,7 @@ class FineTuner():
         trainer.model.save_pretrained(self.fine_tuned_model_name)
         trainer.tokenizer.save_pretrained(self.fine_tuned_model_name)
 
-        self.eval_results = trainer.evaluate()
+        #self.eval_results = trainer.evaluate() #not enough memory on cluster
 
         # Clear VRAM from training
         del trainer
