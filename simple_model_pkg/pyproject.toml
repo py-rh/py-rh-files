@@ -12,4 +12,4 @@ dependencies = [
 ]
 
 [tool.setuptools]
-py-modules = ["model"]
+py-modules = ["model", "trainer"]
