@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vhr10-trainer"
+version = "0.1.0"
+description = "VHR10 classification trainer with DINOv3"
+requires-python = ">=3.8"
+dependencies = [
+    "torch",
+    "torchgeo",
+    "transformers",
+    "torchvision",
+    "pillow",
+]
+
+[tool.setuptools]
+py-modules = ["trainer"]
