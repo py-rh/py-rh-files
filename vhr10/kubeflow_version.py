@@ -1,5 +1,5 @@
 import argparse
-
+import os 
 
 def train_vhr10(
     start_time,
@@ -18,7 +18,7 @@ def train_vhr10(
     from trainer import VHR10Trainer
 
     trainer = VHR10Trainer(data_root=data_root, checkpoint_dir=checkpoint_dir)
-    print("Time to first activity:", time.time() - start_time)
+    print("Time to first activity:", time.time() - start_time) # 287.35
 
     trainer.setup(
         lr=lr,
@@ -29,9 +29,9 @@ def train_vhr10(
     print("Time to setup:", time.time() - start_time)
 
     data_start = time.time()
-    trainer.load_data(batch_size)
+    trainer.load_data(batch_size, num_workers=0)
     print("Time to load data:", time.time() - data_start)
-    print("Time to start training:", time.time() - start_time)
+    print("Time to start training:", time.time() - start_time) # 297.81
 
     trainer.train(num_epochs=epochs, threshold=threshold)
     print("Training complete, total time:", time.time() - start_time)
@@ -123,6 +123,7 @@ if __name__ == "__main__":
                 "pillow",
                 "soxr",
             ],
+            env={"HF_TOKEN": os.environ["HF_TOKEN"]}
         ),
         runtime=torch_runtime,
     )
@@ -131,4 +132,4 @@ if __name__ == "__main__":
     for logline in client.get_job_logs(job_name, follow=True):
         print(logline)
 
-    print("Training took:", time.time() - start_time)
+    print("Training took:", time.time() - start_time) # 342.5

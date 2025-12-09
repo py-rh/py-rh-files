@@ -1,9 +1,47 @@
 import argparse
 import time
-
+import os 
 import kubetorch as kt
 
 from trainer import VHR10Trainer
+
+container = {
+        "name": "pytorch-container",
+        "image": "pytorch/pytorch:latest",
+        "resources": {
+            "requests": {
+                "cpu": "0.5",
+                "memory": "1Gi",
+                "nvidia.com/gpu": 1,
+            },
+            "limits": {
+                "nvidia.com/gpu": 1,
+            }
+        },
+    }
+
+PYTORCHJOB_MANIFEST = {
+    "apiVersion": "kubeflow.org/v1",
+    "kind": "PyTorchJob",
+    "metadata": {
+        "name": "",
+        "namespace": "default",
+    },
+    "spec": {
+        "pytorchReplicaSpecs": {
+            "Master": {
+                "replicas": 1,
+                "restartPolicy": "OnFailure",
+                "template": {"spec": {"containers": [container]}},
+            },
+            "Worker": {
+                "replicas": 2,
+                "restartPolicy": "OnFailure",
+                "template": {"spec": {"containers": [container]}},
+            },
+        },
+    },
+}
 
 
 def main():
@@ -53,7 +91,10 @@ def main():
 
     args = parser.parse_args()
 
-    # Define compute configuration
+    # Set worker replicas (total = 1 Master + N-1 Workers)
+    PYTORCHJOB_MANIFEST["spec"]["pytorchReplicaSpecs"]["Worker"]["replicas"] = args.workers - 1
+
+    # Define image with dependencies
     img = kt.Image(image_id="pytorch/pytorch:2.7.1-cuda12.8-cudnn9-runtime").pip_install(
         [
             "torchgeo[datasets,models]",
@@ -62,15 +103,15 @@ def main():
             "pillow",
             "soxr",  # Required by transformers for audio_utils
         ]
-    )
+    ).set_env_vars({"HF_TOKEN": os.environ["HF_TOKEN"]})
 
-    gpu_compute = kt.Compute(
-        gpus=1,
-        image=img,
-        launch_timeout=600,
-        inactivity_ttl="2h",
-        secrets=["huggingface"],
-    ).distribute("pytorch", workers=args.workers)
+    # Create compute from PyTorchJob manifest
+    gpu_compute = kt.Compute.from_manifest(PYTORCHJOB_MANIFEST)
+    gpu_compute.gpus = 1
+    gpu_compute.image = img
+    gpu_compute.launch_timeout = 600
+    gpu_compute.inactivity_ttl = "2h"
+    gpu_compute.distributed_config = {"quorum_workers": args.workers}
 
     # Initialize trainer arguments
     init_args = dict(
@@ -89,15 +130,15 @@ def main():
         model_name=args.model_name,
         num_classes=args.num_classes,
     )
-    print("Time to setup:", time.time() - start_time) # 16.46 on 2nd run, 274 seconds on first run 
+    print("Time to setup:", time.time() - start_time)
 
     data_start = time.time()
     remote_trainer.load_data(args.batch_size)
-    print("Time to load data:", time.time() - data_start) # 1.6794 seconds on 2nd run, 5.88 seconds on 1st run
-    print("Time to start training:", time.time() - start_time) # 18.14 seconds on 2nd+ run, 280 seconds on 1st run
+    print("Time to load data:", time.time() - data_start)
+    print("Time to start training:", time.time() - start_time)
 
     remote_trainer.train(num_epochs=args.epochs, threshold=args.threshold)
-    print("Training complete, total time:", time.time() - start_time) # 161 seconds on 2nd+ run, 429s on first run
+    print("Training complete, total time:", time.time() - start_time)
 
 if __name__ == "__main__":
     main()
