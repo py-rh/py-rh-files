@@ -89,15 +89,15 @@ def main():
         model_name=args.model_name,
         num_classes=args.num_classes,
     )
-    print("Time to setup:", time.time() - start_time) # 16.46 on 2nd run, 274 seconds on first run, cold start on image too
+    print("Time to setup:", time.time() - start_time) # 16.46 on 2nd run, 39.29 from cached image, 274 seconds on first run, cold start on image too
 
     data_start = time.time()
-    remote_trainer.load_data(args.batch_size)
+    remote_trainer.load_data(args.batch_size, num_workers=0)
     print("Time to load data:", time.time() - data_start) # 1.6794 seconds on 2nd run, 5.88 seconds on 1st run
-    print("Time to start training:", time.time() - start_time) # 18.14 seconds on 2nd+ run, 280 seconds on 1st run
+    print("Time to start training:", time.time() - start_time) # 18.14 seconds on 2nd+ run, 55 on a warm node, 280 seconds on 1st run
 
     remote_trainer.train(num_epochs=args.epochs, threshold=args.threshold)
-    print("Training complete, total time:", time.time() - start_time) # 161 seconds on 2nd+ run, 429s on first run
+    print("Training complete, total time:", time.time() - start_time) # 161 seconds on 2nd+ run, 429s on first run (cold)
 
 if __name__ == "__main__":
     main()

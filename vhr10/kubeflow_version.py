@@ -18,7 +18,7 @@ def train_vhr10(
     from trainer import VHR10Trainer
 
     trainer = VHR10Trainer(data_root=data_root, checkpoint_dir=checkpoint_dir)
-    print("Time to first activity:", time.time() - start_time) # 287.35 from cold, 
+    print("Time to first activity:", time.time() - start_time) # 287.35 from cold, 55.33 from warm
 
     trainer.setup(
         lr=lr,
@@ -31,7 +31,7 @@ def train_vhr10(
     data_start = time.time()
     trainer.load_data(batch_size, num_workers=0)
     print("Time to load data:", time.time() - data_start)
-    print("Time to start training:", time.time() - start_time) # 297.81
+    print("Time to start training:", time.time() - start_time) # 297.81, 66 from warm cached image
 
     trainer.train(num_epochs=epochs, threshold=threshold)
     print("Training complete, total time:", time.time() - start_time)
