@@ -89,7 +89,7 @@ def main():
         model_name=args.model_name,
         num_classes=args.num_classes,
     )
-    print("Time to setup:", time.time() - start_time) # 16.46 on 2nd run, 274 seconds on first run 
+    print("Time to setup:", time.time() - start_time) # 16.46 on 2nd run, 274 seconds on first run, cold start on image too
 
     data_start = time.time()
     remote_trainer.load_data(args.batch_size)

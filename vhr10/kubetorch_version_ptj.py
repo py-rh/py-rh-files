@@ -108,6 +108,7 @@ def main():
     # Create compute from PyTorchJob manifest
     gpu_compute = kt.Compute.from_manifest(PYTORCHJOB_MANIFEST)
     gpu_compute.gpus = 1
+    print(gpu_compute.gpus)
     gpu_compute.image = img
     gpu_compute.launch_timeout = 600
     gpu_compute.inactivity_ttl = "2h"
@@ -121,7 +122,7 @@ def main():
 
     # Dispatch trainer class to remote GPUs
     remote_trainer = kt.cls(VHR10Trainer).to(gpu_compute, init_args=init_args)
-    print("Time to first activity:", time.time() - start_time)
+    print("Time to first activity:", time.time() - start_time) 
 
     # Run distributed training
     remote_trainer.setup(
@@ -135,10 +136,10 @@ def main():
     data_start = time.time()
     remote_trainer.load_data(args.batch_size)
     print("Time to load data:", time.time() - data_start)
-    print("Time to start training:", time.time() - start_time)
+    print("Time to start training:", time.time() - start_time) # 19 seconds after warm
 
     remote_trainer.train(num_epochs=args.epochs, threshold=args.threshold)
-    print("Training complete, total time:", time.time() - start_time)
+    print("Training complete, total time:", time.time() - start_time) # 160 s after first run
 
 if __name__ == "__main__":
     main()

@@ -18,7 +18,7 @@ def train_vhr10(
     from trainer import VHR10Trainer
 
     trainer = VHR10Trainer(data_root=data_root, checkpoint_dir=checkpoint_dir)
-    print("Time to first activity:", time.time() - start_time) # 287.35
+    print("Time to first activity:", time.time() - start_time) # 287.35 from cold, 
 
     trainer.setup(
         lr=lr,
@@ -132,4 +132,4 @@ if __name__ == "__main__":
     for logline in client.get_job_logs(job_name, follow=True):
         print(logline)
 
-    print("Training took:", time.time() - start_time) # 342.5
+    print("Training took:", time.time() - start_time) # 342.5 for cold start, 112s for warm start
