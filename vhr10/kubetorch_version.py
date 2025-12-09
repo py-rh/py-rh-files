@@ -10,7 +10,7 @@ def main():
     start_time = time.time()
 
     parser = argparse.ArgumentParser(description="VHR10 Classification with DINOv3")
-    parser.add_argument("--epochs", type=int, default=20, help="number of epochs")
+    parser.add_argument("--epochs", type=int, default=3, help="number of epochs")
     parser.add_argument("--batch-size", type=int, default=32, help="batch size")
     parser.add_argument("--lr", type=float, default=1e-4, help="learning rate")
     parser.add_argument(
@@ -41,8 +41,14 @@ def main():
     parser.add_argument(
         "--num-classes",
         type=int,
-        default=11,
-        help="number of classes (VHR10 uses 11 for labels 1-10)",
+        default=10,
+        help="number of classes (VHR10 uses labels 1-10)",
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.3,
+        help="probability to use for binary classification",
     )
 
     args = parser.parse_args()
@@ -83,15 +89,15 @@ def main():
         model_name=args.model_name,
         num_classes=args.num_classes,
     )
-    print("Time to setup:", time.time() - start_time)
+    print("Time to setup:", time.time() - start_time) # 16.46
 
     data_start = time.time()
     remote_trainer.load_data(args.batch_size)
-    print("Time to load data:", time.time() - data_start)
-    print("Time to start training:", time.time() - start_time)
+    print("Time to load data:", time.time() - data_start) # 1.6794
+    print("Time to start training:", time.time() - start_time) # 18.14
 
-    remote_trainer.train(num_epochs=args.epochs)
-    print("Training complete, total time:", time.time() - start_time)
+    remote_trainer.train(num_epochs=args.epochs, threshold=args.threshold)
+    print("Training complete, total time:", time.time() - start_time) # 161 seconds
 
 if __name__ == "__main__":
     main()

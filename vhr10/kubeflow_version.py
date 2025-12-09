@@ -11,6 +11,7 @@ def train_vhr10(
     model_name,
     freeze_backbone,
     num_classes,
+    threshold, 
 ):
     import time
 
@@ -32,7 +33,7 @@ def train_vhr10(
     print("Time to load data:", time.time() - data_start)
     print("Time to start training:", time.time() - start_time)
 
-    trainer.train(num_epochs=epochs)
+    trainer.train(num_epochs=epochs, threshold=threshold)
     print("Training complete, total time:", time.time() - start_time)
 
 
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     parser = argparse.ArgumentParser(description="VHR10 Classification with DINOv3")
-    parser.add_argument("--epochs", type=int, default=20, help="number of epochs")
+    parser.add_argument("--epochs", type=int, default=3, help="number of epochs")
     parser.add_argument("--batch-size", type=int, default=32, help="batch size")
     parser.add_argument("--lr", type=float, default=1e-4, help="learning rate")
     parser.add_argument(
@@ -73,8 +74,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num-classes",
         type=int,
-        default=11,
-        help="number of classes (VHR10 uses 11 for labels 1-10)",
+        default=10,
+        help="number of classes (VHR10 uses labels 1-10)",
+    )
+    parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.3,
+        help="probability to use for binary classification",
     )
 
     args = parser.parse_args()
@@ -100,11 +107,12 @@ if __name__ == "__main__":
                 "model_name": args.model_name,
                 "freeze_backbone": args.freeze_backbone,
                 "num_classes": args.num_classes,
+                "threshold": args.threshold, 
             },
             num_nodes=args.workers,
             resources_per_node={
-                "cpu": 2,
-                "memory": "7Gi",
+                # "cpu": 2,
+                # "memory": "7Gi",
                 "nvidia.com/gpu": 1,
             },
             packages_to_install=[
