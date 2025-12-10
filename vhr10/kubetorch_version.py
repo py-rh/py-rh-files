@@ -97,7 +97,7 @@ def main():
     print("Time to start training:", time.time() - start_time) # 18.14 seconds on 2nd+ run, 55 on a warm node, 280 seconds on 1st run
 
     remote_trainer.train(num_epochs=args.epochs, threshold=args.threshold)
-    print("Training complete, total time:", time.time() - start_time) # 161 seconds on 2nd+ run, 429s on first run (cold)
+    print("Training complete, total time:", time.time() - start_time) # 58 seconds for 2nd+ time, 96 seconds on a first image warm run, 429s on first run (cold)
 
 if __name__ == "__main__":
     main()

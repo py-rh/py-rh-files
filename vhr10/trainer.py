@@ -439,7 +439,6 @@ class VHR10Trainer:
         Uses BCEWithLogitsLoss and sigmoid for multi-label predictions.
         Metrics: F1 score (macro-averaged across classes)
         """
-        import time 
         self.model.train()
         running_loss = 0.0
         total_tp = 0  # True positives
@@ -448,7 +447,7 @@ class VHR10Trainer:
 
         num_batches = len(self.train_loader)
         print_interval = max(1, num_batches // 10)
-        train_start_time = time.time()
+
         for batch_idx, batch in enumerate(self.train_loader):
             images = batch["image"].to(self.device)
             labels = batch["label"].to(self.device)  # Multi-hot vectors
@@ -487,13 +486,10 @@ class VHR10Trainer:
                     f"Loss: {loss.item():.4f}, F1: {f1:.4f}"
                 )
             
-            print('Batch ends after , ', train_start_time - time.time())
-
         epoch_loss = running_loss / num_batches
         precision = total_tp / (total_tp + total_fp + 1e-8)
         recall = total_tp / (total_tp + total_fn + 1e-8)
         epoch_f1 = 2 * precision * recall / (precision + recall + 1e-8)
-        print('Epoch ends after , ', train_start_time - time.time())
         return epoch_loss, epoch_f1
 
     # VHR10 class names (0-indexed)
@@ -511,8 +507,6 @@ class VHR10Trainer:
 
         In distributed mode, aggregates metrics across all ranks for accurate validation.
         """
-        import time 
-        eval_start = time.time()
         self.model.eval()
         running_loss = 0.0
         num_classes = len(self.CLASS_NAMES)
@@ -580,7 +574,6 @@ class VHR10Trainer:
                 support = int(tp + fn)  # Total actual positives for this class
                 print(f"{name:<20} {p:>10.4f} {r:>10.4f} {f1:>10.4f} {support:>10}")
             print("-" * 62)
-        print('Eval time took ', time.time() - eval_start)
         return val_loss, val_f1
     
     def setup(self,
